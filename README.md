@@ -9,7 +9,7 @@ Computer-assisted medical surgeries require accurate instance segmentation of su
 We observe that, due to the typical orientation and aspect ratio of medical instruments, the cross-domain fine-tuning of the instance segmentation model detects and segments the object regions correctly but is insufficient to classify the segmented regions accurately. 
 We propose using cumulative IoU over the entire test dataset as the evaluation metric. Using cumulative IoU provides many insights about the low performance of state-of-the-art instance segmentation techniques on the dataset.
 We propose a novel three-stage deep neural network architecture to augment a third stage in a standard instance segmentation pipeline to perform mask-based classification of the segmented object. To handle small datasets with visually similar classes, we train the proposed third stage using ideas from metric learning.
-
+Read more: Paper[https://www.cse.iitd.ac.in/~britty/papers/S3Net_WACV_2022_manuscipt.pdf]
 
 Data
 ----
