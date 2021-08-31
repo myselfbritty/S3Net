@@ -1,6 +1,5 @@
 
-S3NET: A Three Stage Deep Neural Network Model for 
-Highly Accurate Instance Segmentation of Surgical Instruments
+S3NET: Instance Level Segmentation
 ===========================================
 
 Overview
