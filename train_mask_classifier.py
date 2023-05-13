@@ -25,20 +25,28 @@ annotation_file_val = './data/EndoVis_2017/Organized/fold0/coco-annotations/inst
 images_path = './data/EndoVis_2017/Organized/'
 val_folds = ['fold0']
 train_folds=['fold1', 'fold2', 'fold3']
-num_of_epochs = 3
+num_of_epochs = 100
 loss_file_path = 'mask_loss.txt'
 val_loss_file_path = 'val_loss.txt'
 model_save_path = './pre-trained-weights/Stage_3/final_weights_fold0.h5'
 ########################################################
+base_model = make_model(WEIGHT_DECAY = WEIGHT_DECAY)
 
-model = make_classifier(num_classes=num_classes, WEIGHT_DECAY = WEIGHT_DECAY)
+temp_ip1 = tf.keras.layers.Input((3,image_size,image_size))
+temp_ip2 = tf.keras.layers.Input((25,image_size//4,image_size//4))
+temp_feat = base_model([temp_ip1, temp_ip2])
+base_model.load_weights('./pre-trained-weights/Stage_3/base_model.h5')
+classifier_model = make_classifier(num_classes = num_classes)
 
 optimizer = tf.keras.optimizers.Adam(learning_rate=1e-5)
 
 @tf.function
 def train_step(image, mask, label, gt_mask):
+    
+    feat = base_model([image, mask])
     with tf.GradientTape() as tape:
-        op = model([image, mask, label], mode='margin', training = True)
+        
+        op = classifier_model(feat, mode='softmax', training = True)
         
         loss_fn = tf.keras.losses.CategoricalCrossentropy(reduction=tf.keras.losses.Reduction.NONE)
         loss = loss_fn(label,op)
@@ -46,13 +54,14 @@ def train_step(image, mask, label, gt_mask):
         loss = tf.math.reduce_sum(loss)
         denominator = tf.math.reduce_sum(gt_mask)
         loss = tf.math.divide(loss, denominator)
-    grads = tape.gradient(loss, model.trainable_weights)
-    optimizer.apply_gradients(zip(grads, model.trainable_weights))
+    grads = tape.gradient(loss,classifier_model.trainable_weights)
+    optimizer.apply_gradients(zip(grads,classifier_model.trainable_weights))
     return loss
 
 @tf.function
 def val_step(image, mask, label, gt_mask):
-    op = model([image, mask], mode='softmax', training = False)
+    feat = base_model([image, mask], training = False)
+    op = classifier_model(feat, mode='softmax', training = False)
     loss_fn = tf.keras.losses.CategoricalCrossentropy(reduction=tf.keras.losses.Reduction.NONE)
     loss = loss_fn(label,op)
     loss = tf.math.multiply(loss, gt_mask)
@@ -68,8 +77,8 @@ image_path_dict = {}
 
 
 for fold in train_folds:
-    for image in os.listdir(os.path.join(images_path, fold,'images')):
-        current_image_path = os.path.join(images_path, fold,'images',image)
+    for image in os.listdir(os.path.join(fold,'images')):
+        current_image_path = os.path.join(fold,'images',image)
         
         image_path_dict[image] = current_image_path
         
@@ -125,7 +134,8 @@ for image_id in range(len(image_ids)):
             segm_mask[segm_mask==1] = 255
             segm_mask = cv2.resize(segm_mask, (image_size//4,image_size//4))
             segm_mask = segm_mask.astype(np.float32)
-            segm_mask /= 255.0
+            segm_mask /= 127.5
+            segm_mask -= 1
             current_mask[count,:,:] = segm_mask
             count += 1
     train_labels.append(label)
@@ -150,8 +160,8 @@ image_path_dict = {}
 
 
 for fold in val_folds:
-    for image in os.listdir(os.path.join(images_path, fold,'images')):
-        current_image_path = os.path.join(images_path, fold,'images',image)
+    for image in os.listdir(os.path.join(fold,'images')):
+        current_image_path = os.path.join(fold,'images',image)
         
         image_path_dict[image] = current_image_path
         
@@ -207,7 +217,8 @@ for image_id in range(len(image_ids)):
             segm_mask[segm_mask==1] = 255
             segm_mask = cv2.resize(segm_mask, (image_size//4,image_size//4))
             segm_mask = segm_mask.astype(np.float32)
-            segm_mask /= 255.0
+            segm_mask /= 127.5
+            segm_mask -= 1
             current_mask[count,:,:] = segm_mask
             count += 1
     val_labels.append(label)
@@ -228,13 +239,23 @@ print(val_mask.shape)
 print(val_mask_gt.shape)
 
 
+# train_images = np.asarray(train_images, dtype = np.float32)
+# train_labels = np.asarray(train_labels, dtype = np.float32)
+# train_mask = np.asarray(train_mask, dtype = np.float32)
+# train_mask_gt = np.asarray(train_mask_gt, dtype = np.float32)
+# print(train_images.shape)
+# print(train_labels.shape)
+# print(train_mask.shape)
+# print(train_mask_gt.shape)
+
+
 #######################################################################################################
 
 
 num_of_batches = train_images.shape[0]//batch_size
-num_of_val_batches = val_images.shape[0]//batch_size
+num_of_val_batches = val_images.shape[0]//1
 val_count = 1
-best_val_loss = 1000.0
+# best_val_loss = 1000.0
 for epoch in range(num_of_epochs):
     this_epoch_loss = 0.0
     train_images, train_labels, train_mask, train_mask_gt = shuffle(train_images, train_labels, train_mask, train_mask_gt, random_state=666)
@@ -247,30 +268,25 @@ for epoch in range(num_of_epochs):
         loss = train_step(image_batch, mask_batch, label_batch, mask_gt_batch)
         print('Epoch '+str(epoch)+'\tBatch '+str(i)+'\tLoss: '+str(loss)+'\n')
         this_epoch_loss+=loss.numpy()
-        
-        if (i+1)%50 == 0:
-            this_val_loss = 0.0
-            for j in range(num_of_val_batches):
-                image_batch = val_images[j*batch_size:j*batch_size+batch_size,:,:,:]
-                label_batch = val_labels[j*batch_size:j*batch_size+batch_size]
-                mask_batch = val_mask[j*batch_size:j*batch_size+batch_size]
-                mask_gt_batch = val_mask_gt[j*batch_size:j*batch_size+batch_size]
                 
-                loss = val_step(image_batch, mask_batch, label_batch, mask_gt_batch)
-                
-                loss = loss.numpy()
-                this_val_loss += loss
-            this_val_loss /= num_of_val_batches
-            print('Validation: '+str(val_count) + '\tLoss: '+str(this_val_loss))
-            val_count += 1
-            with open(val_loss_file_path,'a') as f:
-                f.write(str(this_val_loss)+'\n')
-            if this_val_loss <= best_val_loss:
-                print('Model Loss improved from: ' + str(best_val_loss) + 'to: ' + str(this_val_loss) + '\nSaving Weights\n')
-                best_val_loss = this_val_loss
-                model.save_weights(model_save_path)
-                
-        
+    classifier_model.save_weights(model_save_path)
     this_epoch_loss /= num_of_batches
     with open(loss_file_path,'a') as f:
         f.write(str(this_epoch_loss)+'\n')
+    this_val_loss = 0.0
+    for j in range(num_of_val_batches):
+        image_batch = val_images[j*1:j*1+1,:,:,:]
+        label_batch = val_labels[j*1:j*1+1]
+        mask_batch = val_mask[j*1:j*1+1]
+        mask_gt_batch = val_mask_gt[j*1:j*1+1]
+        
+        loss = val_step(image_batch, mask_batch, label_batch, mask_gt_batch)
+        
+        loss = loss.numpy()
+        this_val_loss += loss
+    this_val_loss /= num_of_val_batches
+    print('Validation: '+str(val_count) + '\tLoss: '+str(this_val_loss))
+    val_count += 1
+    with open(val_loss_file_path,'a') as f:
+        f.write(str(this_val_loss)+'\n')
+    

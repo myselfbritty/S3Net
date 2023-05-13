@@ -1,5 +1,4 @@
-
-S3NET: Instance Level Segmentation
+S3NET: From Forks to Forceps: A New Architecture forInstance Segmentation of Surgical Instruments
 ===========================================
 
 Overview
@@ -8,7 +7,7 @@ Computer-assisted medical surgeries require accurate instance segmentation of su
 We observe that, due to the typical orientation and aspect ratio of medical instruments, the cross-domain fine-tuning of the instance segmentation model detects and segments the object regions correctly but is insufficient to classify the segmented regions accurately. 
 We propose using cumulative IoU over the entire test dataset as the evaluation metric. Using cumulative IoU provides many insights about the low performance of state-of-the-art instance segmentation techniques on the dataset.
 We propose a novel three-stage deep neural network architecture to augment a third stage in a standard instance segmentation pipeline to perform mask-based classification of the segmented object. To handle small datasets with visually similar classes, we train the proposed third stage using ideas from metric learning.
-Read more: [Paper](https://www.cse.iitd.ac.in/~britty/papers/S3Net_WACV_2022_manuscipt.pdf)
+
 
 Data
 ----
@@ -22,6 +21,28 @@ Grasping Retractor
 Monopolar Curved Scissors 
 Ultrasound Probe
 
+EndoVis 2018 consisting of 11 X 149-frame sequences is used as train set and 4 X 149-frame sequences is used as test set.
+Instrument labels are 
+Bipolar Forceps 
+Prograsp Forceps
+Large Needle Driver
+Monopolar Curved Scissors 
+Ultrasound Probe
+Suction Instrument
+Clip Applier
+
+EETS consisting of 20 X 125-frame sequences is used as train set and 10 X 125-frame sequences is used as test set.
+Instrument labels are 
+Suction
+Irrigation
+Dissector
+Scissors
+Knife
+Navigation
+Biopsy
+Curette
+Drill
+Tumor_biopsy
 
 Method
 ------
@@ -46,7 +67,7 @@ To install you can run
 * pip install tqdm
 * pip install opencv-python
 * pip install scikit-image
-* git clone https://github.com/S3NET/A_Three_Stage_Deep_Neural_Network_for_Highly_Accuracte_Surgical_Instrument_Segmentation.git S3NET
+* git clone https://bitbucket.org/anonymouscvprs3net/s3net_3stage S3NET
 * cd S3NET
 * bash compile.sh
 * python setup.py install
@@ -58,14 +79,12 @@ To install you can run
 (Tested on Ubuntu 16.04. For Ubuntu 18 and 20, install gcc 9)
 Dependecies:
 Nvidia Driver >= 460
-CUDA == 11.2
-Cudnn == 8.1
 
 * conda create -n S3NET_Stage_3 python=3.7
 * conda activate S3NET_Stage_3
 * conda install cython
+* conda install -c anaconda tensorflow-gpu=2.4.1
 * pip install "git+https://github.com/philferriere/cocoapi.git#egg=pycocotools&subdirectory=PythonAPI"
-* pip install tensorflow==2.5
 * pip install mmcv==0.2.14
 * pip install tqdm
 * pip install opencv-python
@@ -119,7 +138,9 @@ Download the 2017 dataset from here [2]. Arrange the data in the folder format
     │       .......................
 
 We can do either four-fold validation or test- test evaluation
-		
+
+- The pre-trained weights of all stages are available at [Google drive](https://drive.google.com/drive/folders/1k7WxHMq60CkMneHb6e8lzGY4RUxFlZfW?usp=sharing)
+
 Stage 1_2
 ------------------------------
 
@@ -147,9 +168,14 @@ mkdir at data/EndoVis2017/test
 
 - Copy all images from /path/to/EndoVis2017/test_crop/images to /path/to/data/EndoVis2017/test
 
+- The pre-trained weights are in [Google drive](https://drive.google.com/drive/folders/1k7WxHMq60CkMneHb6e8lzGY4RUxFlZfW?usp=sharing)
+
+- Kindly download them and add to pre-trained-weights folder.
+
 Training
 ---------------
-Resized weights are in pre-trained-weights folder
+
+Resized weights of pre-trained MaskRCNN (ImageNet) are in pre-trained-weights folder for training afresh. 
 
 ``python training_routine.py``
 
@@ -205,14 +231,7 @@ To compare with earlier state-of-the-art, we calculate the Endovis challenge IOU
 ``python scripts/calculate_challenge_IOU.py --targets_dir path/to/data/EndoVis_2017/raw_data/cropped_train_2017 --predictions_dir path/to/S3NET_outputs/S3NET_folds_withsegm_removed``
 
 
-2. Calculate Cumulative IOU
-------------------------------
-We propose the use of Cumulative IOU for the evaluation of instrument segmentation as it can handle false postives and give better insights into the performance of the algorithm.
-
-``python scripts/calculate_cumulative_IOU.py --targets_dir path/to/data/EndoVis_2017/raw_data/cropped_train_2017 --predictions_dir path/to/S3NET_outputs/S3NET_folds_withsegm_removed --num_classes 8``
-
-
-3. Generate Colored Masks
+2. Generate Colored Masks
 ------------------------------
 For better visualization of the masks 
 
@@ -220,7 +239,7 @@ For better visualization of the masks
 ``python scripts/generate_colored_masks.py --images_dir data/EndoVis_2017/raw_data/cropped_train_2017 --predictions_dir /path/to/S3NET_outputs/S3NET_folds_withsegm_removed --save_dir /path/to/S3NET_outputs/S3NET_folds_withsegm_removed/colored_masks``
 
 
-4. Visualisations
+3. Visualisations
 ------------------------------
 ![plot](./images/0001.jpg)
 ![plot](./images/0002.jpg)

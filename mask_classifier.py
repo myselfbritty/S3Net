@@ -29,30 +29,40 @@ class ArcFace(LY.Layer):
                                 trainable=True,
                                 regularizer=self.regularizer)
 
-    def call(self, inputs, mode = 'margin'):
-        if mode == 'margin':
-            x, y = inputs
-            # normalize feature
-            x = tf.nn.l2_normalize(x, axis=-1)
-            # normalize weights
-            W = tf.nn.l2_normalize(self.W, axis=0)
-            # dot product
-            logits = x @ W
-            # add margin
-            # clip logits to prevent zero division when backward
-            theta = tf.acos(K.clip(logits, -1.0 + K.epsilon(), 1.0 - K.epsilon()))
-            target_logits = tf.cos(theta + self.m)
-            
-            logits = logits * (1 - y) + target_logits * y
-            # feature re-scale
-            logits *= self.s
-            out = tf.nn.softmax(logits)
+    def call(self, inputs, mode = 'margin', training = True):
+        if training:
+            if mode == 'margin':
+                x, y = inputs
+                # normalize feature
+                x = tf.nn.l2_normalize(x, axis=-1)
+                # normalize weights
+                W = tf.nn.l2_normalize(self.W, axis=0)
+                # dot product
+                logits = x @ W
+                # add margin
+                # clip logits to prevent zero division when backward
+                theta = tf.acos(K.clip(logits, -1.0 + K.epsilon(), 1.0 - K.epsilon()))
+                target_logits = tf.cos(theta + self.m)
+                
+                logits = logits * (1 - y) + target_logits * y
+                # feature re-scale
+                logits *= self.s
+                out = tf.nn.softmax(logits)
+            else:
+                x, _ = inputs
+                
+                # x = tf.nn.l2_normalize(x, axis=-1)
+                # W = tf.nn.l2_normalize(self.W, axis=0)
+                logits = x@self.W
+                # logits *= self.s
+                out = tf.nn.softmax(logits)
         else:
             x, _ = inputs
             
             # x = tf.nn.l2_normalize(x, axis=-1)
             # W = tf.nn.l2_normalize(self.W, axis=0)
             logits = x@self.W
+            # logits *= self.s
             out = tf.nn.softmax(logits)
         return out
 
@@ -66,7 +76,6 @@ class MultiplyMask(LY.Layer):
     def __init__(self):
         super(MultiplyMask, self).__init__()
         self.ga = LY.GlobalAveragePooling2D()
-        
     def call(self,feature, mask):
         op_features = []
         
@@ -81,11 +90,10 @@ class MultiplyMask(LY.Layer):
         return op
 
 
-class make_classifier(tf.keras.Model):
+class make_model(tf.keras.Model):
     
-    def __init__(self, num_classes = 10, WEIGHT_DECAY = 1e-4):
-        super(make_classifier, self).__init__()
-        self.num_classes = num_classes
+    def __init__(self, WEIGHT_DECAY = 1e-4):
+        super(make_model, self).__init__()
         
         self.resnet_model = keras.models.load_model('./pre-trained-weights/Stage_3/resnet_2.h5')
         self.conv1 = LY.Conv2D(256, 1)
@@ -100,22 +108,12 @@ class make_classifier(tf.keras.Model):
         self.concat = LY.Concatenate(axis = 1)
         self.masking_layer  = MultiplyMask()
         
-        self.dropout1 = LY.Dropout(0.35)
 
-        self.dense1 = LY.Dense(1024, activation = 'relu')
+        self.dense1 = LY.Dense(128, activation = 'relu')
         
-        
-        self.arc_layer = ArcFace(n_classes=self.num_classes, s=30, m=0.4)
-        
-    def call(self, inputs, mode = 'margin', training = True):
-        if mode == 'margin':
-            ip = inputs[0]
-            mask_ip = inputs[1]
-            y = inputs[2]
-        else:
-            ip = inputs[0]
-            mask_ip = inputs[1]
-            y = tf.zeros(shape = (ip.shape[0], 25, self.num_classes))
+    def call(self, inputs, training = False):
+        ip = inputs[0]
+        mask_ip = inputs[1]
         op = self.resnet_model(ip)
         stage_2 = op[0]
         stage_3 = op[1]
@@ -134,11 +132,25 @@ class make_classifier(tf.keras.Model):
         
         fp_o = self.concat([fp_2, fp_3, fp_4, fp_5])
         fp_o = self.masking_layer(fp_o, mask_ip)
-        fp_o = self.dropout1(fp_o, training = training)
         x = self.dense1(fp_o)
         
-        op = self.arc_layer([x,y], mode = mode)
+        return x
+
+class make_classifier(tf.keras.Model):
+    
+    def __init__(self, num_classes = 10):
+        super(make_classifier, self).__init__()
+        self.num_classes = num_classes
+        self.arc_layer = ArcFace(n_classes=self.num_classes, s=30, m=0.4)
+
+    def call(self, inputs, mode='margin', training=True):
+        if mode == 'margin':
+            feat = inputs[0]
+            y = inputs[1]
+        else:
+            feat = inputs
+            y = tf.zeros(shape = (feat.shape[0], 25, self.num_classes))
+        op = self.arc_layer([feat,y], mode = mode, training = training)
+
         return op
 
-
-    

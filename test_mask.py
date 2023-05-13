@@ -26,27 +26,18 @@ fold = './data/EndoVis_2017/Organized/' + current_fold
 image_path_dict = {}
 
 
-model = make_classifier(num_classes=7)
+base_model = make_model()
 
-
-
-
-
-
-@tf.function
-def create_prediction(image, mask):
-    op = model([image, mask], mode='softmax', training = False)
-    return op
-
-##########################################################
-ip1 = np.zeros((1, 3, 224, 224))
-ip2 = np.zeros((1, 25, 56, 56))
-
-op = create_prediction(ip1, ip2)
-model.load_weights('./pre-trained-weights/Stage_3/final_weights_' + current_fold + '.h5')
-
-
-############################################################
+temp_ip1 = tf.keras.layers.Input((3,224,224),batch_size=1)
+temp_ip2 = tf.keras.layers.Input((25,224//4,224//4),batch_size=1)
+temp_feat = base_model([temp_ip1, temp_ip2])
+# print(temp_feat)
+# import sys
+# sys.exit()
+base_model.load_weights('./pre-trained-weights/Stage_3/base_model.h5')
+classifier_model = make_classifier(num_classes = 7)
+temp_op = classifier_model(temp_feat,mode='softmax', training=False)
+classifier_model.load_weights('./pre-trained-weights/Stage_3/final_weights_fold0.h5')
 
 
 for image in os.listdir(os.path.join(fold,'images')):
@@ -63,6 +54,7 @@ category_ids = example_coco.getCatIds(catNms=['square'])
 
 image_ids = example_coco.getImgIds(catIds=category_ids)
 
+# print(image_ids)
 image_id_dict = {}
 
 for image_id in range(len(image_ids)):
@@ -72,7 +64,9 @@ for image_id in range(len(image_ids)):
     current_file = image_data['file_name']
     current_path = image_path_dict[current_file]
     image_id_dict[current_id]    = current_path
-
+# print(image_id_dict)
+# import sys
+# sys.exit()
 
 with open(os.path.join(ip_path, ip_file), 'r') as f:
     data = json.load(f)
@@ -113,7 +107,13 @@ for d in data:
     cv2.multiply(current_image, stdinv, current_image)
     current_image = np.transpose(current_image, [2,0,1])
     current_image = np.expand_dims(current_image, axis = 0)
-    op = create_prediction(current_image, current_mask)
+    # print(current_image.sahpe)
+    # print(current_mask.shape)
+    # import sys
+    # sys.exit()
+    feat = base_model([current_image, current_mask],training=False)
+    op = classifier_model(feat,mode='softmax', training=False).numpy()
+    # op,_ = model.predict([current_image, current_mask])
     new_id = np.argmax(op[0,0,:])
     data_new["category_id"] = int(new_id + 1)
     data_write.append(data_new)
