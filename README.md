@@ -102,43 +102,17 @@ Download the 2017 dataset from here [2]. Arrange the data in the folder format
 ::
 
     ├── data
-    │   ├── EndoVis2017
-    │   	├── raw_data
-    │   		├── test
-    │   		│   ├── instrument_dataset_1
-    │   		│   │   ├── left_frames
-    │   		│   │   └── right_frames
-    | 		.......................
-    │   		└── train
-    │       		├── instrument_dataset_1
-    │       		│   ├── ground_truth
-    │       		│   │   ├── Left_Prograsp_Forceps_labels
-    │       		│   │   ├── Maryland_Bipolar_Forceps_labels
-    │       		│   │   ├── Other_labels
-    │       		│   │   └── Right_Prograsp_Forceps_labels
-    │       		│   ├── left_frames
-    │       		│   └── right_frames
-    │       .......................
-    │   	├── Organized_data
-    │   		├── fold0
-    │   		│   ├── annotations
-    │   		│   ├── binary_annotations
-    │   		│   ├── coco-annotations
-    │   		│   ├── images
-	│		.......................
-    │   		│── test
-    │       	│	├── images
-	│   		│── train
-    │       	│	├── images
-	│   		└── test_crop
-    │       		├── coco-annotations
-	│				│── instrument_dataset_9
-	│				│── instrument_dataset_10
-	│
-    │       .......................
-
-We can do either four-fold validation or test- test evaluation
-
+    │   ├── EndoVis2018
+    │   	├── train
+    │   		├── annotations
+    │   		├── binary_annotations
+    │   		├── coco-annotations
+    │   		├── images
+    		├── val
+    │   		├── annotations
+    │   		├── binary_annotations
+    │   		├── coco-annotations
+    │   		├── images
 - The pre-trained weights of all stages are available at [Google drive](https://drive.google.com/drive/folders/1k7WxHMq60CkMneHb6e8lzGY4RUxFlZfW?usp=sharing)
 
 Stage 1_2
@@ -194,7 +168,7 @@ Stage 3
 Training
 ---------------
 Resized weights are in pre-trained-weights folder
-
+``python preprocessing.py''
 ``python train_mask_classifier.py``
 
 Testing
@@ -212,51 +186,3 @@ Organize the data of the dataset into the appropriate splits for final evaluatio
 ``python prepare_data/prepare_data_for_evaluation.py`` for four-fold cross validation 
 
 ``python prepare_data/prepare_test_data_for_evaluation.py`` for the test data preparation
-
-
-Generate Masks
-----------
-
-Generate predictions masks after Stage  3. 
-
-Repeat for all folds and keep the same save_dir path for fold-wise mask predictions, change paths for test set of each fold
-
-``python scripts/generate_masks_from_coco.py --annFile path/to/data/EndoVis_2017/Organized/fold0/coco-annotations/instances_val_sub.json --resFile /path/to/output.pkl.json --save_dir path/to/save/predictions``
-
-1. Calculate Challenge IOU
-------------------------------
-To compare with earlier state-of-the-art, we calculate the Endovis challenge IOU.
-
-
-``python scripts/calculate_challenge_IOU.py --targets_dir path/to/data/EndoVis_2017/raw_data/cropped_train_2017 --predictions_dir path/to/S3NET_outputs/S3NET_folds_withsegm_removed``
-
-
-2. Generate Colored Masks
-------------------------------
-For better visualization of the masks 
-
-
-``python scripts/generate_colored_masks.py --images_dir data/EndoVis_2017/raw_data/cropped_train_2017 --predictions_dir /path/to/S3NET_outputs/S3NET_folds_withsegm_removed --save_dir /path/to/S3NET_outputs/S3NET_folds_withsegm_removed/colored_masks``
-
-
-3. Visualisations
-------------------------------
-![plot](./images/0001.jpg)
-![plot](./images/0002.jpg)
-![plot](./images/0003.jpg)
-![plot](./images/0004.jpg)
-![plot](./images/0005.jpg)
-![plot](./images/0006.jpg)
-![plot](./images/0007.jpg)
-
-
-References
-
-[1] Allan, M., Shvets, A., Kurmann, T., Zhang, Z., Duggal, R., Su, Y.H., , et al.: 2017 robotic instrument segmentation challenge. arXiv preprint arXiv:1902.06426 (2019)
-
-
-[2] https://endovissub2017-roboticinstrumentsegmentation.grand-challenge.org/
-
-[3] Shvets, Alexey A., et al. "Automatic instrument segmentation in robot-assisted surgery using deep learning." 2018 17th IEEE International Conference on Machine Learning and Applications (ICMLA). IEEE, 2018.
-
-[4] González, Cristina, Laura Bravo-Sánchez, and Pablo Arbelaez. "Isinet: an instance-based approach for surgical instrument segmentation." International Conference on Medical Image Computing and Computer-Assisted Intervention. Springer, Cham, 2020.
