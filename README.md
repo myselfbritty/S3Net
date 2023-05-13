@@ -108,7 +108,7 @@ Download the 2017 dataset from here [2]. Arrange the data in the folder format
     │   		├── binary_annotations
     │   		├── coco-annotations
     │   		├── images
-    		├── val
+    |	|	├── val
     │   		├── annotations
     │   		├── binary_annotations
     │   		├── coco-annotations
