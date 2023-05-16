@@ -95,9 +95,7 @@ Nvidia Driver >= 460
 Organize data
 ----------
 
-Here we describe the steps for using the Endoscopic Vision 2017 [1] for instrument-type segmentation.
-
-Download the 2017 dataset from here [2]. Arrange the data in the folder format
+Organize the data, dataset is available in [Google drive] (https://drive.google.com/drive/folders/1pU1eWmYPJOwiaP7XKPjhZriZ1Anc-9dm?usp=share_link)
 
 ::
 
@@ -113,34 +111,9 @@ Download the 2017 dataset from here [2]. Arrange the data in the folder format
     │   		├── binary_annotations
     │   		├── coco-annotations
     │   		├── images
-- The pre-trained weights of all stages are available at [Google drive](https://drive.google.com/drive/folders/1k7WxHMq60CkMneHb6e8lzGY4RUxFlZfW?usp=sharing)
 
 Stage 1_2
 ------------------------------
-
-- Organize the data of the dataset into the appropriate splits for coco format.
-
-``python organize2017.py --data-dir /path/to/raw_train_data/ \
---save-dir /path/to/save/organized/data/ --cropped``
-
-``python organize2017_test.py --data_dir /path/to/raw_test_data/\
---save_dir /path/to/save/data/EndoVis2017/ --cropped``
-
-Convert the dataset to the MS-COCO format. Required for Mask R-CNN transfer learning.
-
-``python prepare_data/convert_to_coco_foldwise.py --root_dir /path/to/organized/data/
-    --dataset <dataset_name> --fold_name <dataset_split>``
-    
-``python prepare_data/convert_to_coco_test.py --test_dir /path/to/data/EndoVis2017/test_crop/
-    --dataset <dataset_name>``
-
-mkdir at data/EndoVis2017/train
-
-mkdir at data/EndoVis2017/test
-
-- Copy all images from /path/to/organized/data/fold#/images to /path/to/data/EndoVis2017/train
-
-- Copy all images from /path/to/EndoVis2017/test_crop/images to /path/to/data/EndoVis2017/test
 
 - The pre-trained weights are in [Google drive](https://drive.google.com/drive/folders/1k7WxHMq60CkMneHb6e8lzGY4RUxFlZfW?usp=sharing)
 
@@ -181,8 +154,4 @@ Run the testing by
 
 Evaluation
 ----------
-Organize the data of the dataset into the appropriate splits for final evaluation of combined dataset
 
-``python prepare_data/prepare_data_for_evaluation.py`` for four-fold cross validation 
-
-``python prepare_data/prepare_test_data_for_evaluation.py`` for the test data preparation
