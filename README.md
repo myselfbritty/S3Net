@@ -11,15 +11,7 @@ We propose a novel three-stage deep neural network architecture to augment a thi
 
 Data
 ----
-EndoVis 2017 consisting of 8 X 225-frame sequences is used as train set and 2 X 300-frame sequences is used as test set.
-Instrument labels are 
-Bipolar Forceps 
-Prograsp Forceps
-Large Needle Driver
-Vessel Sealer
-Grasping Retractor
-Monopolar Curved Scissors 
-Ultrasound Probe
+
 
 EndoVis 2018 consisting of 11 X 149-frame sequences is used as train set and 4 X 149-frame sequences is used as test set.
 Instrument labels are 
@@ -31,18 +23,6 @@ Ultrasound Probe
 Suction Instrument
 Clip Applier
 
-EETS consisting of 20 X 125-frame sequences is used as train set and 10 X 125-frame sequences is used as test set.
-Instrument labels are 
-Suction
-Irrigation
-Dissector
-Scissors
-Knife
-Navigation
-Biopsy
-Curette
-Drill
-Tumor_biopsy
 
 Method
 ------
@@ -154,4 +134,8 @@ Run the testing by
 
 Evaluation
 ----------
+Evaluation was performed using ISINet evaluation framework as mentioned in [1].
 
+References
+
+[1] González, Cristina, Laura Bravo-Sánchez, and Pablo Arbelaez. "Isinet: an instance-based approach for surgical instrument segmentation." International Conference on Medical Image Computing and Computer-Assisted Intervention. Springer, Cham, 2020.
