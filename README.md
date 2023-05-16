@@ -126,7 +126,6 @@ Download the 2017 dataset from here [2]. Arrange the data in the folder format
 
 We can do either four-fold validation or test- test evaluation
 
-- The pre-trained weights of all stages are available at [Google drive](https://drive.google.com/drive/folders/1k7WxHMq60CkMneHb6e8lzGY4RUxFlZfW?usp=sharing)
 
 Stage 1_2
 ------------------------------
