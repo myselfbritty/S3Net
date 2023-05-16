@@ -75,7 +75,7 @@ Nvidia Driver >= 460
 Organize data
 ----------
 
-Organize the data, dataset is available in [Google drive](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)
+Organize the data, dataset is available in [Google drive](https://drive.google.com/drive/folders/1BSW04v4dRP_AGt3R1L8U6YU614SP3hJM?usp=share_link)
 
 ::
 
