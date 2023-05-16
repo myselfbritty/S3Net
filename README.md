@@ -31,19 +31,6 @@ Ultrasound Probe
 Suction Instrument
 Clip Applier
 
-EETS consisting of 20 X 125-frame sequences is used as train set and 10 X 125-frame sequences is used as test set.
-Instrument labels are 
-Suction
-Irrigation
-Dissector
-Scissors
-Knife
-Navigation
-Biopsy
-Curette
-Drill
-Tumor_biopsy
-
 Method
 ------
 S3NET
@@ -207,11 +194,7 @@ Run the testing by
 
 Evaluation
 ----------
-Organize the data of the dataset into the appropriate splits for final evaluation of combined dataset
-
-``python prepare_data/prepare_data_for_evaluation.py`` for four-fold cross validation 
-
-``python prepare_data/prepare_test_data_for_evaluation.py`` for the test data preparation
+Evaluation was performed using ISINet evaluation framework as mentioned in [4].
 
 
 Generate Masks
@@ -222,13 +205,6 @@ Generate predictions masks after Stage  3.
 Repeat for all folds and keep the same save_dir path for fold-wise mask predictions, change paths for test set of each fold
 
 ``python scripts/generate_masks_from_coco.py --annFile path/to/data/EndoVis_2017/Organized/fold0/coco-annotations/instances_val_sub.json --resFile /path/to/output.pkl.json --save_dir path/to/save/predictions``
-
-1. Calculate Challenge IOU
-------------------------------
-To compare with earlier state-of-the-art, we calculate the Endovis challenge IOU.
-
-
-``python scripts/calculate_challenge_IOU.py --targets_dir path/to/data/EndoVis_2017/raw_data/cropped_train_2017 --predictions_dir path/to/S3NET_outputs/S3NET_folds_withsegm_removed``
 
 
 2. Generate Colored Masks
