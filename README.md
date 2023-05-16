@@ -155,7 +155,7 @@ mkdir at data/EndoVis2017/test
 
 - Copy all images from /path/to/EndoVis2017/test_crop/images to /path/to/data/EndoVis2017/test
 
-- The pre-trained weights are in [Google drive](https://drive.google.com/drive/folders/1k7WxHMq60CkMneHb6e8lzGY4RUxFlZfW?usp=sharing)
+- The pre-trained weights are in [Google drive](https://drive.google.com/drive/folders/1pU1eWmYPJOwiaP7XKPjhZriZ1Anc-9dm?usp=share_link)
 
 - Kindly download them and add to pre-trained-weights folder.
 
